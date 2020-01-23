@@ -9,3 +9,13 @@ Första sketch på ett ungefär hur de ska se ut med de nödvädigaste funktione
 ![ER-diagram](er.png)
 ## 4. Arkitektur (Beskriv filer och mappar - vad gör/inehåller de?)
 Använd restful routes
+
+| **URL** | **HTTP Verb** |  **Action**|
+|------------|-------------|------------|
+| /photos/         | GET       | index  
+| /photos/new      | GET       | new   
+| /photos          | POST      | create   
+| /photos/:id      | GET       | show       
+| /photos/:id/edit | GET       | edit       
+| /photos/:id      | PATCH/PUT | update    
+| /photos/:id      | DELETE    | destroy
