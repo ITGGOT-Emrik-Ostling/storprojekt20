@@ -8,4 +8,8 @@ html lang="en"
    body
       header
          a href="/" Hem
+         - if name.nil?
+            p du är inte inloggad
+         - else
+            p du är inloggad som #{name}
       ==yield
