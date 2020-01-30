@@ -8,8 +8,10 @@ html lang="en"
    body
       header
          a href="/" Hem
-         - if name.nil?
+         - if defined?(name).nil? || name.nil?
             p du är inte inloggad
          - else
             p du är inloggad som #{name}
+            form action="/user/logout" method="post"
+               input type="submit" value="Log Out"/
       ==yield

@@ -12,11 +12,13 @@ get("/") do
   if session[:login].nil?
     slim(:start)
   else
+    user_id = db.execute("SELECT user_id FROM users WHERE password_digest = ?", params[:password])
+    file_id = db.execute("SELECT file_id FROM file_users WHERE user_id = ?", user_id[0]["user_id"])
     slim(:"files/view", locals: {name: session[:name]})
   end
 end
 
-post("/register") do
+post("/user/register") do
   password = params[:password]
   name = params[:name]
   password_digest = BCrypt::Password.create(password)
@@ -30,7 +32,7 @@ post("/register") do
   redirect("/")
 end
 
-post("/login") do
+post("/user/login") do
   password = params[:password]
   name = params[:name]
   password_digest = db.execute("SELECT password_digest,role FROM users WHERE username = ?", name)
@@ -45,5 +47,12 @@ post("/login") do
     session[:login] = password_digest[0]["password_digest"]
     session[:name] = name
   end
+  redirect("/")
+end
+
+post("/user/logout") do
+  session[:role] = "member"
+  session[:login] = nil
+  session[:name] = nil
   redirect("/")
 end
