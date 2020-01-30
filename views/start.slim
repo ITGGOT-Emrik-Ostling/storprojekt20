@@ -1,18 +1,14 @@
 h3 Registrera
-form action="/register" method="post"
+form action="/user/register" method="post"
    input type="text" name="name" placeholder="Namn"/
    input type="password" name="password" placeholder="Lösenord"/
    input type="submit" value="Submit"/
-
-- if not defined?(exists).nil?
-   p någon har redan snott ditt användarnamn
 
 h3 Logga in
-form action="/login" method="post"
+form action="/user/login" method="post"
    input type="text" name="name" placeholder="Namn"/
    input type="password" name="password" placeholder="Lösenord"/
    input type="submit" value="Submit"/
 
-- if not defined?(loginfail).nil?
-   p fel användarnamn eller fel lösenord eller så saknar du rättigheter
-
+h1 Välkommen till den här fantastiska sidan!
+h3 gör gärna ett konto här ovanför
