@@ -12,9 +12,9 @@ get("/") do
   if session[:login].nil?
     slim(:start)
   else
-    user_id = db.execute("SELECT user_id FROM users WHERE password_digest = ?", params[:password])
-    file_id = db.execute("SELECT file_id FROM file_users WHERE user_id = ?", user_id[0]["user_id"])
-    slim(:"files/view", locals: {name: session[:name]})
+    user_id = db.execute("SELECT id FROM users WHERE password_digest = ?", params[:password])
+    file_id = db.execute("SELECT file_id FROM files_users WHERE user_id = ?", user_id[0]["user_id"])
+    slim(:"files/view", locals: {name: session[:name], user_id: user_id, file_id: file_id})
   end
 end
 
