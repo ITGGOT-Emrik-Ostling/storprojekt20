@@ -1,7 +1,7 @@
 # Storprojekt20
 Storprojekt 2020 Webbserverprogrammering.
 
-![Moon](moon.jpg)
+![Moon](docs/moon.jpg)
 
 ##  Uppgiftsbeskrivning
 
