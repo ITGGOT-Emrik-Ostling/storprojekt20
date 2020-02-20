@@ -37,30 +37,34 @@ post("/files/create") do
   user_id = db.execute("SELECT id FROM users WHERE password_digest = ?", session[:login])[0]["id"]
   filename = params[:file][:filename]
   file = params[:file][:tempfile]
-  path = "files/#{user_id}/#{filename}"
+  # path = "files/#{user_id}/#{filename}"
+  path = "files/#{user_id}"
   public_file = 0
+  
   if params[:public]
-    path = "./public/" + path
+    path = "public/" + path
     public_file = 1
   else
-    path = "./private/" + path
+    path = "private/" + path
   end
 
-  Dir.mkdir "private/files/#{user_id}" unless Dir.exist?("private/files/#{user_id}")
-
+  Dir.mkdir path unless Dir.exist?(path)
+  path = "./#{path}/#{filename}"
   File.open(path, "w+") do |f|
     f.write(file.read)
   end
+
   db.execute("INSERT INTO files (date, path, public) VALUES (?, ?, ?);", Time.now.to_i, path, public_file)
   file_id = db.execute("SELECT id FROM files WHERE path = ?", path)[0]["id"]
   db.execute("INSERT INTO files_users (file_id, user_id) VALUES (?, ?);", file_id, user_id)
   category = db.execute("SELECT id FROM category WHERE name = ?", params[:file][:type])
 
-  db.execute("INSERT INTO category (name) VALUES (?);", params[:file][:type]) if category == []
+  if category == []
+    db.execute("INSERT INTO category (name) VALUES (?);", params[:file][:type])
+    category = db.execute("SELECT id FROM category WHERE name = ?", params[:file][:type])
+  end
 
-  category_id = db.execute("SELECT id FROM category WHERE name = ?", params[:file][:type])[0]["id"]
-
-  db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id, file_id)
+  db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category[0]["id"], file_id)
   redirect("/files/view")
 end
 
