@@ -1,14 +1,20 @@
-h3 Registrera
-form action="/user/register" method="post"
-   input type="text" name="name" placeholder="Namn"/
-   input type="password" name="password" placeholder="Lösenord"/
-   input type="submit" value="Submit"/
+main
+   h1 Välkommen till den här fantastiska sidan!
+   h3 skapa ett konto här nedanför
 
-h3 Logga in
-form action="/user/login" method="post"
-   input type="text" name="name" placeholder="Namn"/
-   input type="password" name="password" placeholder="Lösenord"/
-   input type="submit" value="Submit"/
+div#login
+   h3 Registrera
+   form action="/user/register" method="post"
+      input type="text" name="name" placeholder="För och efternamn"/
+      input type="email" name="email" placeholder="Email"/
+      input type="password" name="password" placeholder="Lösenord"/
+      input type="submit" value="Submit"/
 
-h1 Välkommen till den här fantastiska sidan!
-h3 gör gärna ett konto här ovanför
+   h3 Logga in
+   form action="/user/login" method="post"
+      input type="text" name="name" placeholder="Namn"/
+      input type="password" name="password" placeholder="Lösenord"/
+      input type="submit" value="Submit"/
+      br/
+      input type="checkbox" name="remember" Håll mig inloggad
+      
