@@ -4,14 +4,21 @@ html lang="en"
       meta charset="UTF-8"/
       meta name="viewport" content="width=device-width, initial-scale=1.0"/
       meta http-equiv="X-UA-Compatible" content="ie=edge"/
+      link rel="stylesheet" href="/style.css"/
       title Slutprojekt 2020
    body
       header
-         a href="/" Hem
-         - if defined?(name).nil? || name.nil?
-            p du är inte inloggad
-         - else
-            p du är inloggad som #{name}
-            form action="/user/logout" method="post"
-               input type="submit" value="Log Out"/
+         nav
+            a href="/" Hem
+            a href="/files/view" Filer
+         div
+            - if defined?(name).nil? || name.nil?
+               p du är inte inloggad
+               a href="#login" Logga in
+            - else
+               p du är inloggad som #{name}
+               form action="/user/logout" method="post"
+                  input type="submit" value="Log Out"/
+      - if !defined?(error).nil? && !error.nil?
+         b#error = error
       ==yield
