@@ -1,6 +1,46 @@
 p Dina filer:
 
-p = file_id
+- unless files[0].nil?
+   table
+      tr
+         - files[0].keys.length.times do |i|
+            th = files[0].keys[i]
+         th delete
+
+      - files.length.times do |i|
+         tr
+            td = files[i]["id"]
+            td = files[i]["date"]
+            - if files[i]["public"] == 1
+               td
+                  a href='#{files[i]["path"][8..-1]}' download="" Download
+            - else
+               td
+                  a href='#{files[i]["path"][1..-1]}' download="" Download
+            td = files[i]["public"]
+            td 
+               form action="/files/delete" method="post"
+                  input type="hidden" name="file_id" value="#{files[i]["id"]}"/
+                  input type="submit" value="Delete"/
+
+
+/ Finish this later
+p Publika filer:
+table
+   tr
+      - public_files[0].keys.length.times do |i|
+         th = public_files[0].keys[i]
+   - public_files.length.times do |i|
+      tr
+         td = public_files[i]["id"]
+         td = public_files[i]["date"]
+         - if public_files[i]["public"] == 1
+            td
+               a href='#{public_files[i]["path"][8..-1]}' download="" Download
+         - else
+            td
+               a href='#{public_files[i]["path"][1..-1]}' download="" Download
+         td = public_files[i]["public"]
 
 h3 LADDA UPP FIL
 form action="/files/create" method="post" enctype="multipart/form-data"
