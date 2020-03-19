@@ -9,9 +9,9 @@ end
 def get_user_id(password_digest)
   id = db.execute("SELECT id FROM users WHERE password_digest = ?", password_digest)
   if (id == []) || id.nil?
-    return nil
+    nil
   else
-    return id[0]["id"]
+    id[0]["id"]
   end
 end
 
@@ -35,19 +35,43 @@ def array_of_hashes_to_array(hash_array)
   out
 end
 
+# Slår ihop flera rader i en hash efter vad dupe är dublett
+def merge_duplicates(array, merge, dupe)
+  i = 0
+  while i + 1 < array.length
+    if array[i][dupe] == array[i + 1][dupe]
+      # de ska slås ihop
+      merge.each do |m|
+        if array[i][m] != array[i + 1][m]
+          if array[i][m].is_a?(String)
+            array[i][m] = [array[i][m], array[i + 1][m]]
+          elsif array[i][m].is_a?(Array)
+            array[i][m] += array[i + 1][m]
+          end
+        end
+      end
+      array.delete_at(i + 1)
+    else
+      i += 1
+    end
+  end
+  array
+end
+
 def get_files(file_ids)
   ids = array_of_hashes_to_array(file_ids)
-  # if file_ids.length == 1
-  #   ids = array_of_hashes_to_array(file_ids)
-  # elsif file_ids.length == 2
-  #   ids = array_of_hashes_to_array(file_ids[0]) + array_of_hashes_to_array(file_ids[1])
-  # end
 
   ids = ids.to_s
   ids[0] = "("
   ids[-1] = ")"
 
-  files = db.execute("SELECT * FROM files WHERE id IN #{ids}")
+  files = db.execute("SELECT files.*, category.name, files_users.user_id, users.username FROM ((((category_files
+    INNER JOIN category ON category.id = category_files.cat_id)
+    INNER JOIN files ON files.id = category_files.file_id)
+    INNER JOIN files_users ON files_users.file_id = category_files.file_id)
+    INNER JOIN users ON users.id == files_users.user_id)
+    WHERE files.id IN #{ids}")
+  files = merge_duplicates(files, ["name", "username", "user_id"], "id")
   public_files = db.execute("SELECT * FROM files WHERE public = 1")
   {files: files, public_files: public_files}
 end
@@ -127,18 +151,37 @@ def file_upload(password_digest, parentfile, publicfile)
   db.execute("INSERT INTO files (date, path, public) VALUES (?, ?, ?);", Time.now.to_i, path, public_file)
   file_id = db.execute("SELECT id FROM files WHERE path = ?", path)[0]["id"]
   db.execute("INSERT INTO files_users (file_id, user_id) VALUES (?, ?);", file_id, user_id)
-  category = db.execute("SELECT id FROM category WHERE name = ?", parentfile[:type])
 
-  if category == []
-    db.execute("INSERT INTO category (name) VALUES (?);", parentfile[:type])
-    category = db.execute("SELECT id FROM category WHERE name = ?", parentfile[:type])
+  categories = parentfile[:type].split("/")
+  categories.each do |category|
+    category_id = db.execute("SELECT id FROM category WHERE name = ?", category)
+
+    if category_id == []
+      db.execute("INSERT INTO category (name) VALUES (?);", category)
+      category_id = db.execute("SELECT id FROM category WHERE name = ?", category)
+    end
+
+    db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
   end
-
-  db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category[0]["id"], file_id)
 end
 
 def delete_file(file_id, password_digest)
-  db.execute()
+  user_id = db.execute("SELECT user_id FROM files_users WHERE file_id = ?", file_id)
+  p user_id
+  if !user_id.nil? && user_id[0]["user_id"] == get_user_id(password_digest)
+    file_path = db.execute("SELECT path FROM files WHERE id = ?", file_id)
+    db.execute("DELETE FROM files_users WHERE file_id = ?", file_id)
+    db.execute("DELETE FROM files WHERE id = ?", file_id)
+    db.execute("DELETE FROM category_files WHERE file_id = ?", file_id)
+
+    if !file_path.nil? && File.exist?(file_path[0]["path"])
+      File.delete(file_path[0]["path"])
+    else
+      "ERROR: the file doesn't exist"
+    end
+  else
+    "ERROR: you don't have permission to delete that file"
+  end
 end
 
 def email_confirm(password_digest)
