@@ -26,12 +26,13 @@ require "rack/protection"
 use Rack::Protection
 
 # https://github.com/kickstarter/rack-attack needs to be configured
-require "rack/attack"
-use Rack::Attack
+# require "rack/attack"
+# use Rack::Attack
+# Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
 
-Rack::Attack.throttle("requests by ip", limit: 5, period: 2) do |request|
-  request.ip
-end
+# Rack::Attack.throttle("requests by ip", limit: 5, period: 2) do |request|
+#   request.ip
+# end
 
 # require "sinatra/rate-limiter"
 # enable :rate_limiter
@@ -50,7 +51,7 @@ Mail.defaults do
     password: config["email_password"],
     authentication: :login,
     ssl: true,
-    openssl_verify_mode: "none",
+    openssl_verify_mode: "none"
   }
 end
 
@@ -65,9 +66,9 @@ before do
 
   session[:error] = nil if request.post?
 
-  # if request.path_info != "/" && !request.path_info.start_with?("/user/") && session[:login].nil?
-  #   redirect("/")
-  # end
+  if request.path_info != "/" && !request.path_info.start_with?("/user/") && session[:login].nil?
+    redirect("/")
+  end
 end
 
 get("/") do
@@ -76,19 +77,19 @@ get("/") do
       session[:login] = request.cookies["remember_me"]
       session[:name] = "test"
       session[:role] = "member"
-      redirect("/files/view")
+      redirect("/files/show")
     end
     # Not logged in redirects to the startpage
     slim(:start, locals: {error: session[:error]})
   else
-    redirect("/files/view")
+    redirect("/files/show")
   end
 end
 
-get("/files/view") do
+get("/files/show") do
   file_ids = get_file_ids(session[:login])
   files = get_files(file_ids)
-  slim(:"files/view", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files]})
+  slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files]})
 end
 
 get("/private/files/:user_id/:file_name") do
@@ -103,7 +104,7 @@ get("/user/confirm_email/:key") do
   if session[:confirm_email] == params[:key] && !session[:login].nil?
     email_confirm(session[:login])
     session[:confirm_email] = nil
-    redirect("/files/view")
+    redirect("/files/show")
   else
     "Wrong email or link, lol\nGo home: http://#{request.host_with_port}"
   end
@@ -111,13 +112,17 @@ end
 
 post("/files/create") do
   file_upload(session[:login], params[:file], params[:public])
-  redirect("/files/view")
+  redirect("/files/show")
 end
 
 post("/files/delete") do
   file_id = params[:file_id]
-  delete_file(file_id, session[:login])
-  redirect("/files/view")
+  result = delete_file(file_id, session[:login]) == "error"
+
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
+  redirect("/files/show")
 end
 
 post("/user/register") do
@@ -137,7 +142,7 @@ post("/user/register") do
     to: params[:email].to_s,
     from: "nasirforpresident2020@national.shitposting.agency",
     subject: "Confirm your account at epic cloud site",
-    body: "Welcome to OUR site #{params[:name]}, where we steal you're data and sell it for profit\nSounds good?\nClick here to erase your suffering (by reading this mail you accept all our terms and conditions)\nhttp://#{request.host_with_port}/user/confirm_email/#{confirm_email_key}\n\nThanks for all the fish!",
+    body: "Welcome to OUR site #{params[:name]}, where we steal you're data and sell it for profit\nSounds good?\nClick here to erase your suffering (by reading this mail you accept all our terms and conditions)\nhttp://#{request.host_with_port}/user/confirm_email/#{confirm_email_key}\n\nThanks for all the fish!"
   ).deliver
 
   session[:name] = params[:name]
