@@ -88,7 +88,7 @@ end
 
 get("/files/show") do
   file_ids = get_file_ids(session[:login])
-  files = get_files(file_ids)
+  files = get_all_files(file_ids)
   slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files]})
 end
 
@@ -111,7 +111,10 @@ get("/user/confirm_email/:key") do
 end
 
 post("/files/create") do
-  file_upload(session[:login], params[:file], params[:public])
+  result = file_upload(session[:login], params[:file], params[:public])
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
   redirect("/files/show")
 end
 

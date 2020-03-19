@@ -58,21 +58,31 @@ def merge_duplicates(array, merge, dupe)
   array
 end
 
-def get_files(file_ids)
+def get_files(ids = nil)
+  sql_base = "SELECT files.*, category.category_name, files_users.user_id, users.username FROM ((((category_files
+    INNER JOIN category ON category.id = category_files.cat_id)
+    INNER JOIN files ON files.id = category_files.file_id)
+    INNER JOIN files_users ON files_users.file_id = category_files.file_id)
+    INNER JOIN users ON users.id == files_users.user_id)
+    WHERE"
+  files = if ids.nil?
+    db.execute(sql_base + " public = 1")
+  else
+    db.execute(sql_base + " files.id IN #{ids}")
+  end
+  files = merge_duplicates(files, ["category_name", "username", "user_id"], "id")
+  files
+end
+
+def get_all_files(file_ids)
   ids = array_of_hashes_to_array(file_ids)
 
   ids = ids.to_s
   ids[0] = "("
   ids[-1] = ")"
 
-  files = db.execute("SELECT files.*, category.name, files_users.user_id, users.username FROM ((((category_files
-    INNER JOIN category ON category.id = category_files.cat_id)
-    INNER JOIN files ON files.id = category_files.file_id)
-    INNER JOIN files_users ON files_users.file_id = category_files.file_id)
-    INNER JOIN users ON users.id == files_users.user_id)
-    WHERE files.id IN #{ids}")
-  files = merge_duplicates(files, ["name", "username", "user_id"], "id")
-  public_files = db.execute("SELECT * FROM files WHERE public = 1")
+  public_files = get_files
+  files = get_files(ids)
   {files: files, public_files: public_files}
 end
 
@@ -99,6 +109,9 @@ def user_login(password, name)
 end
 
 def file_upload(password_digest, parentfile, publicfile)
+  if parentfile.nil?
+    return "ERROR: please select a file you want to upload, lol"
+  end
   user_id = get_user_id(password_digest)
   filename = parentfile[:filename]
   file = parentfile[:tempfile]
@@ -154,11 +167,11 @@ def file_upload(password_digest, parentfile, publicfile)
 
   categories = parentfile[:type].split("/")
   categories.each do |category|
-    category_id = db.execute("SELECT id FROM category WHERE name = ?", category)
+    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category)
 
     if category_id == []
-      db.execute("INSERT INTO category (name) VALUES (?);", category)
-      category_id = db.execute("SELECT id FROM category WHERE name = ?", category)
+      db.execute("INSERT INTO category (category_name) VALUES (?);", category)
+      category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category)
     end
 
     db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
