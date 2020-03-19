@@ -23,6 +23,13 @@ header nav {
 
 header nav a {
     margin: 0 1rem;
+    color: white;
+    text-decoration: none;
+}
+
+header nav a:hover {
+    color: #ddd;
+    text-decoration: underline;
 }
 
 header div {
@@ -55,12 +62,14 @@ table {
 table td,
 table th {
     border: 1px solid #ddd;
-    padding: 4px;
+    padding: 4px
 }
 
 table th {
     background-color: slategray;
     color: white;
+    user-select: none;
+    cursor: pointer;
 }
 
 table tr:nth-child(even) {
