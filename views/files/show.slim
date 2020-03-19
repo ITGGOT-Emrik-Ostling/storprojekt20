@@ -5,20 +5,24 @@ p Dina filer:
       tr
          - files[0].keys.length.times do |i|
             th = files[0].keys[i]
+         th download
+         th categories
+         th filename
          th delete
 
       - files.length.times do |i|
-         tr
-            td = files[i]["id"]
-            td = files[i]["date"]
+         tr 
+            - files[0].values.length.times do |j|
+               td = files[i].values[j]
             - if files[i]["public"] == 1
                td
                   a href='#{files[i]["path"][8..-1]}' download="" Download
             - else
                td
                   a href='#{files[i]["path"][1..-1]}' download="" Download
-            td = files[i]["public"]
-            td 
+            td = files[i]["name"].join(" ")
+            td = files[i]["path"].split("/").last
+            td
                form action="/files/delete" method="post"
                   input type="hidden" name="file_id" value="#{files[i]["id"]}"/
                   input type="submit" value="Delete"/
