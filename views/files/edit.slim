@@ -1,0 +1,79 @@
+p = files
+
+p Dina filer:
+
+- unless files[0].nil?
+   table
+      tr
+         - files[0].keys.length.times do |i|
+            th onclick="sortTable(#{i}, this.parentElement.parentElement.parentElement)" = files[0].keys[i]
+         th download
+         th categories
+         th filename
+         th delete
+         th edit
+
+      - files.length.times do |i|
+         tr 
+            - files[0].values.length.times do |j|
+               td = files[i].values[j]
+            - if files[i]["public"] == 1
+               td
+                  a href='#{files[i]["path"][8..-1]}' download="" Download
+            - else
+               td
+                  a href='#{files[i]["path"][1..-1]}' download="" Download
+            - if files[i]["category_name"].is_a?(Array)
+               td = files[i]["category_name"].join(" ")
+            - else
+               td = files[i]["category_name"]
+            td = files[i]["path"].split("/").last
+            td
+               form action="/files/delete" method="post"
+                  input type="hidden" name="file_id" value="#{files[i]["id"]}"/
+                  input type="submit" value="Delete"/
+            td
+               a href="/files/#{files[i]["id"]}/edit" edit
+
+   table
+      tr
+         th Categories
+         th Delete
+      - if files[0]["category_name"].is_a?(Array)
+         - files[0]["category_name"].length.times do |i|
+            tr
+               td = files[0]["category_name"][i]
+               td
+                  form action="/categories/delete" method="post"
+                     input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+                     input type="hidden" name="category" value="#{files[0]["category_name"][i]}"/
+                     input type="submit" value="Delete"/
+      - else
+         tr
+            td = files[0]["category_name"]
+            td
+               form action="/categories/delete" method="post"
+                  input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+                  input type="hidden" name="category" value="#{files[0]["category_name"]}"/
+                  input type="submit" value="Delete"/
+
+   table
+      tr
+         th Users
+         th Delete
+      - if files[0]["username"].is_a?(Array)
+         - files[0]["username"].length.times do |i|
+            tr
+               td = files[0]["username"][i]
+               td
+                  form action="/files/delete" method="post"
+                     input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+                     input type="submit" value="Delete"/
+      - else
+         tr
+            td = files[0]["username"]
+            td
+               form action="/files/delete" method="post"
+                  input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+                  input type="hidden" name="username" value="#{files[0]["username"]}"/
+                  input type="submit" value="Delete"/

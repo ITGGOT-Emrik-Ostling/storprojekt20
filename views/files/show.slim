@@ -9,6 +9,7 @@ p Dina filer:
          th categories
          th filename
          th delete
+         th edit
 
       - files.length.times do |i|
          tr 
@@ -20,13 +21,17 @@ p Dina filer:
             - else
                td
                   a href='#{files[i]["path"][1..-1]}' download="" Download
-            td = files[i]["category_name"].join(" ")
+            - if files[i]["category_name"].is_a?(Array)
+               td = files[i]["category_name"].join(" ")
+            - else
+               td = files[i]["category_name"]
             td = files[i]["path"].split("/").last
             td
                form action="/files/delete" method="post"
                   input type="hidden" name="file_id" value="#{files[i]["id"]}"/
                   input type="submit" value="Delete"/
-
+            td
+               a href="/files/#{files[i]["id"]}/edit" edit
 
 / Finish this later
 p Publika filer:

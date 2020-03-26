@@ -197,6 +197,20 @@ def delete_file(file_id, password_digest)
   end
 end
 
+def delete_category(password_digest, file_id, category_name)
+  file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
+  if file_id.to_i == file_ids[0]["file_id"]
+    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)[0]["id"]
+    p category_name
+    p category_id
+    p file_id
+    db.execute("DELETE FROM category_files WHERE cat_id = ? AND file_id = ?", category_id, file_id)
+  else
+    return "ERROR: Insufficient permissions"
+  end
+  nil
+end
+
 def email_confirm(password_digest)
   db.execute("UPDATE users SET email_confirmed = 1 WHERE password_digest = ?;", password_digest)
 end

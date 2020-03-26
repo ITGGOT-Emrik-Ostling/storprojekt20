@@ -33,7 +33,6 @@ use Rack::Protection
 # Rack::Attack.throttle("requests by ip", limit: 5, period: 2) do |request|
 #   request.ip
 # end
-
 # require "sinatra/rate-limiter"
 # enable :rate_limiter
 
@@ -92,6 +91,11 @@ get("/files/show") do
   slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files]})
 end
 
+get("/files/:file_id/edit") do
+  files = get_all_files(params[:file_id])
+  slim(:"files/edit", locals: {error: session[:error], name: session[:name], files: files[:files]})
+end
+
 get("/private/files/:user_id/:file_name") do
   if params[:user_id].to_i == get_user_id(session[:login])
     send_file("./private/files/#{params[:user_id]}/#{params[:file_name]}")
@@ -111,6 +115,7 @@ get("/user/confirm_email/:key") do
 end
 
 post("/files/create") do
+  p params
   result = file_upload(session[:login], params[:file], params[:public])
   if (result.is_a? String) && result.start_with?("ERROR: ")
     session[:error] = result
@@ -126,6 +131,14 @@ post("/files/delete") do
     session[:error] = result
   end
   redirect("/files/show")
+end
+
+post("/categories/delete") do
+  result = delete_category(session[:login], params[:file_id], params[:category])
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
+  redirect back
 end
 
 post("/user/register") do
