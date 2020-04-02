@@ -1,12 +1,13 @@
 # frozen_string_literal: true
 
-def db
+def db_connect
   db = SQLite3::Database.new("db/users.db")
   db.results_as_hash = true
   db
 end
 
 def get_user_id(password_digest)
+  db = db_connect
   id = db.execute("SELECT id FROM users WHERE password_digest = ?", password_digest)
   if (id == []) || id.nil?
     nil
@@ -16,6 +17,7 @@ def get_user_id(password_digest)
 end
 
 def get_file_ids(password_digest)
+  db = db_connect
   user_id = get_user_id(password_digest)
   file_id = db.execute("SELECT file_id FROM files_users WHERE user_id = ?", user_id)
   # public_file_id = db.execute("SELECT id FROM files WHERE public = 1")
@@ -24,6 +26,7 @@ def get_file_ids(password_digest)
 end
 
 def array_of_hashes_to_array(hash_array)
+  db = db_connect
   out = []
   if !hash_array.is_a?(Array)
     out << hash_array
@@ -37,6 +40,7 @@ end
 
 # Slår ihop flera rader i en hash efter vad dupe är dublett
 def merge_duplicates(array, merge, dupe)
+  db = db_connect
   i = 0
   while i + 1 < array.length
     if array[i][dupe] == array[i + 1][dupe]
@@ -59,6 +63,7 @@ def merge_duplicates(array, merge, dupe)
 end
 
 def get_files(ids = nil)
+  db = db_connect
   sql_base = "SELECT files.*, category.category_name, files_users.user_id, users.username FROM ((((category_files
     INNER JOIN category ON category.id = category_files.cat_id)
     INNER JOIN files ON files.id = category_files.file_id)
@@ -75,6 +80,7 @@ def get_files(ids = nil)
 end
 
 def get_all_files(file_ids)
+  db = db_connect
   ids = array_of_hashes_to_array(file_ids)
 
   ids = ids.to_s
@@ -87,6 +93,7 @@ def get_all_files(file_ids)
 end
 
 def user_register(password, name, email)
+  db = db_connect
   password_digest = BCrypt::Password.create(password)
   begin
     p db.execute("INSERT INTO users (email, username, password_digest, role) VALUES (?, ?, ?, 'member')", email, name, password_digest)
@@ -97,6 +104,7 @@ def user_register(password, name, email)
 end
 
 def user_login(password, name)
+  db = db_connect
   user_info = db.execute("SELECT password_digest,role FROM users WHERE username = ?", name)[0]
 
   password_correct = false
@@ -109,6 +117,7 @@ def user_login(password, name)
 end
 
 def file_upload(password_digest, parentfile, publicfile)
+  db = db_connect
   if parentfile.nil?
     return "ERROR: please select a file you want to upload, lol"
   end
@@ -167,10 +176,13 @@ def file_upload(password_digest, parentfile, publicfile)
 
   categories = parentfile[:type].split("/")
   categories.each do |category|
-    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category)
-
+    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category.chomp)
+    p "kategorier problemet"
+    p category
+    p category_id
     if category_id == []
-      db.execute("INSERT INTO category (category_name) VALUES (?);", category)
+      p category_id == []
+      db.execute("INSERT INTO category (category_name) VALUES (?);", category.chomp)
       category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category)
     end
 
@@ -179,6 +191,7 @@ def file_upload(password_digest, parentfile, publicfile)
 end
 
 def delete_file(file_id, password_digest)
+  db = db_connect
   user_id = db.execute("SELECT user_id FROM files_users WHERE file_id = ?", file_id)
   p user_id
   if !user_id.nil? && user_id[0]["user_id"] == get_user_id(password_digest)
@@ -198,13 +211,17 @@ def delete_file(file_id, password_digest)
 end
 
 def delete_category(password_digest, file_id, category_name)
+  db = db_connect
   file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
   if file_id.to_i == file_ids[0]["file_id"]
-    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)[0]["id"]
+    category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)
     p category_name
     p category_id
     p file_id
-    db.execute("DELETE FROM category_files WHERE cat_id = ? AND file_id = ?", category_id, file_id)
+    if category_id == [] || category_id.nil?
+      return "ERROR: Category doesn't exist"
+    end
+    db.execute("DELETE FROM category_files WHERE cat_id = ? AND file_id = ?", category_id[0]["id"], file_id)
   else
     return "ERROR: Insufficient permissions"
   end
@@ -212,5 +229,16 @@ def delete_category(password_digest, file_id, category_name)
 end
 
 def email_confirm(password_digest)
+  db = db_connect
   db.execute("UPDATE users SET email_confirmed = 1 WHERE password_digest = ?;", password_digest)
+end
+
+def email_status(password_digest)
+  db = db_connect
+  status = db.execute("SELECT email_confirmed FROM users WHERE password_digest = ?", password_digest)
+  if (status == []) || status.nil?
+    false
+  else
+    status[0]["email_confirmed"] == 1
+  end
 end

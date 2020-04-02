@@ -88,7 +88,8 @@ end
 get("/files/show") do
   file_ids = get_file_ids(session[:login])
   files = get_all_files(file_ids)
-  slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files]})
+  email = email_status(session[:login])
+  slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files], email: email})
 end
 
 get("/files/:file_id/edit") do
@@ -134,7 +135,7 @@ post("/files/delete") do
 end
 
 post("/categories/delete") do
-  result = delete_category(session[:login], params[:file_id], params[:category])
+  result = delete_category(session[:login], params[:file_id], params[:category].to_s)
   if (result.is_a? String) && result.start_with?("ERROR: ")
     session[:error] = result
   end
