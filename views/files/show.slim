@@ -35,25 +35,27 @@ p Dina filer:
 
 / Finish this later
 p Publika filer:
-table
-      tr
-         - public_files[0].keys.length.times do |i|
-            th onclick="sortTable(#{i}, this.parentElement.parentElement.parentElement)" = public_files[0].keys[i]
-         th download
-         th filename
+- unless public_files[0].nil?
+   table
+         tr
+            - public_files[0].keys.length.times do |i|
+               th onclick="sortTable(#{i}, this.parentElement.parentElement.parentElement)" = public_files[0].keys[i]
+            th download
+            th filename
 
-      - public_files.length.times do |i|
-         tr 
-            - public_files[0].values.length.times do |j|
-               td = public_files[i].values[j]
-            - if public_files[i]["public"] == 1
-               td
-                  a href='#{public_files[i]["path"][8..-1]}' download="" Download
-            - else
-               td
-                  a href='#{public_files[i]["path"][1..-1]}' download="" Download
-            td = public_files[i]["path"].split("/").last
-
+         - public_files.length.times do |i|
+            tr 
+               - public_files[0].values.length.times do |j|
+                  td = public_files[i].values[j]
+               - if public_files[i]["public"] == 1
+                  td
+                     a href='#{public_files[i]["path"][8..-1]}' download="" Download
+               - else
+                  td
+                     a href='#{public_files[i]["path"][1..-1]}' download="" Download
+               td = public_files[i]["path"].split("/").last
+p Email status
+p = email
 h3 LADDA UPP FIL
 form action="/files/create" method="post" enctype="multipart/form-data"
    input type="file" name="file"
