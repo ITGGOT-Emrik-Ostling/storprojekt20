@@ -1,0 +1,64 @@
+GIT
+  remote: https://github.com/chrisb/yard-sinatra
+  revision: 226e048f615bdf068e65010d47f8cb143fd08865
+  specs:
+    yard-sinatra (2.0.0.beta)
+      activesupport
+      yard (~> 0.7)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    activesupport (6.0.2.2)
+      concurrent-ruby (~> 1.0, >= 1.0.2)
+      i18n (>= 0.7, < 2)
+      minitest (~> 5.1)
+      tzinfo (~> 1.1)
+      zeitwerk (~> 2.2)
+    bcrypt (3.1.13)
+    concurrent-ruby (1.1.6)
+    i18n (1.8.2)
+      concurrent-ruby (~> 1.0)
+    mail (2.7.1)
+      mini_mime (>= 0.1.1)
+    mini_mime (1.0.2)
+    minitest (5.14.0)
+    mustermann (1.1.1)
+      ruby2_keywords (~> 0.0.1)
+    parseconfig (1.0.8)
+    rack (2.2.2)
+    rack-protection (2.0.8.1)
+      rack
+    ruby2_keywords (0.0.2)
+    sinatra (2.0.8.1)
+      mustermann (~> 1.0)
+      rack (~> 2.0)
+      rack-protection (= 2.0.8.1)
+      tilt (~> 2.0)
+    slim (4.0.1)
+      temple (>= 0.7.6, < 0.9)
+      tilt (>= 2.0.6, < 2.1)
+    sqlite3 (1.4.2)
+    temple (0.8.2)
+    thread_safe (0.3.6)
+    tilt (2.0.10)
+    tzinfo (1.2.7)
+      thread_safe (~> 0.1)
+    yard (0.9.24)
+    zeitwerk (2.3.0)
+
+PLATFORMS
+  x64-mingw32
+
+DEPENDENCIES
+  bcrypt
+  mail
+  parseconfig
+  sinatra
+  slim
+  sqlite3
+  yard
+  yard-sinatra!
+
+BUNDLED WITH
+   2.1.4

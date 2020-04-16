@@ -7,6 +7,7 @@ require "bcrypt"
 require "securerandom"
 
 require_relative "./model.rb"
+include Model
 
 enable :sessions
 
@@ -70,6 +71,7 @@ before do
   end
 end
 
+# Show landing page if not logged in, otherwise redirect to show files.
 get("/") do
   if session[:login].nil?
     if !request.cookies["remember_me"].nil? && request.cookies["remember_me"] != ""
@@ -85,6 +87,10 @@ get("/") do
   end
 end
 
+# Displays all Files.
+#
+# @see Model#get_file_ids
+# @see Model#get_all_files
 get("/files/show") do
   file_ids = get_file_ids(session[:login])
   files = get_all_files(file_ids)
@@ -92,11 +98,19 @@ get("/files/show") do
   slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files], email: email})
 end
 
+# Displays a single file to edit.
+#
+# @param [Integer] file_id, the id of the file
+# @see Model#get_all_files
 get("/files/:file_id/edit") do
   files = get_all_files(params[:file_id])
   slim(:"files/edit", locals: {error: session[:error], name: session[:name], files: files[:files]})
 end
 
+# Download a private file.
+#
+# @param [Integer] :user_id, the id of the user
+# @param [Integer] :file_name, the name of the file
 get("/private/files/:user_id/:file_name") do
   if params[:user_id].to_i == get_user_id(session[:login])
     send_file("./private/files/#{params[:user_id]}/#{params[:file_name]}")
@@ -105,6 +119,10 @@ get("/private/files/:user_id/:file_name") do
   end
 end
 
+# Confirms the email address and check if the provided key equals the correct key for that email address.
+#
+# @param [Integer] key, the key provided by the user
+# @param [Integer] confirm_email, the key provided by the server
 get("/user/confirm_email/:key") do
   if session[:confirm_email] == params[:key] && !session[:login].nil?
     email_confirm(session[:login])
@@ -115,6 +133,9 @@ get("/user/confirm_email/:key") do
   end
 end
 
+# Upload a file to the server.
+#
+# @see Model#file_upload
 post("/files/create") do
   p params
   result = file_upload(session[:login], params[:file], params[:public])
@@ -124,6 +145,9 @@ post("/files/create") do
   redirect("/files/show")
 end
 
+# Delete a file from the server.
+#
+# @see Model#delete_file
 post("/files/delete") do
   file_id = params[:file_id]
   result = delete_file(file_id, session[:login]) == "error"
@@ -134,6 +158,9 @@ post("/files/delete") do
   redirect("/files/show")
 end
 
+# Delete a category.
+#
+# @see Model#delete_category
 post("/categories/delete") do
   result = delete_category(session[:login], params[:file_id], params[:category].to_s)
   if (result.is_a? String) && result.start_with?("ERROR: ")
@@ -142,6 +169,10 @@ post("/categories/delete") do
   redirect back
 end
 
+# Regesters a user and sends confirmation email
+#
+# @see Model#user_register
+# @see Model#send_confirmation_email
 post("/user/register") do
   digest = user_register(params[:password], params[:name], params[:email])
 
@@ -152,21 +183,21 @@ post("/user/register") do
     session[:login] = digest
   end
 
-  confirm_email_key = SecureRandom.urlsafe_base64
-  session[:confirm_email] = confirm_email_key
-
-  Mail.new(
-    to: params[:email].to_s,
-    from: "nasirforpresident2020@national.shitposting.agency",
-    subject: "Confirm your account at epic cloud site",
-    body: "Welcome to OUR site #{params[:name]}, where we steal you're data and sell it for profit\nSounds good?\nClick here to erase your suffering (by reading this mail you accept all our terms and conditions)\nhttp://#{request.host_with_port}/user/confirm_email/#{confirm_email_key}\n\nThanks for all the fish!"
-  ).deliver
+  session[:confirm_email] = send_confirmation_email(params[:email], config, params[:name], request.host_with_port)
 
   session[:name] = params[:name]
   session[:role] = "member"
   redirect("/")
 end
 
+# Logins a user and remembers their login information if the checkbox is checked
+#
+# @param [Integer] password, user password
+# @param [Integer] name, username
+# @param [Boolean] remember, if it should remember the login information
+#
+# @see Model#user_register
+# @see Model#send_confirmation_email
 post("/user/login") do
   password = params[:password]
   name = params[:name]
@@ -189,6 +220,7 @@ post("/user/login") do
   redirect("/")
 end
 
+# Clears the session making the user logout
 post("/user/logout") do
   session.clear
   redirect("/")
