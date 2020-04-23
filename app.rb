@@ -169,6 +169,39 @@ post("/categories/delete") do
   redirect back
 end
 
+# Add a category.
+#
+# @see Model#add_category
+post("/categories/add") do
+  result = add_category(session[:login], params[:file_id], params[:category].to_s)
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
+  redirect back
+end
+
+# Delete a user from a file.
+#
+# @see Model#delete_user
+post("/user/delete") do
+  result = delete_user(session[:login], params[:file_id], params[:user_id].to_s)
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
+  redirect back
+end
+
+# Add a user to a file.
+#
+# @see Model#add_user
+post("/user/add") do
+  result = add_user(session[:login], params[:file_id], params[:username].to_s)
+  if (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+  end
+  redirect back
+end
+
 # Regesters a user and sends confirmation email
 #
 # @see Model#user_register

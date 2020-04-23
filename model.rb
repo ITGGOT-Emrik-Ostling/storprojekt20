@@ -17,7 +17,7 @@ module Model
   #
   # @param password_digest [String] the user's password hash
   #
-  # @return [Integer] with the user id
+  # @return [Integer, nil] with the user id
   def get_user_id(password_digest)
     db = db_connect
     id = db.execute("SELECT id FROM users WHERE password_digest = ?", password_digest)
@@ -73,10 +73,16 @@ module Model
         # should merge
         merge.each do |m|
           if array[i][m] != array[i + 1][m]
-            if array[i][m].is_a?(String)
+            if !array[i][m].is_a?(Array) && !array[i + 1][m].is_a?(Array)
               array[i][m] = [array[i][m], array[i + 1][m]]
-            elsif array[i][m].is_a?(Array)
+            elsif array[i][m].is_a?(Array) && array[i + 1][m].is_a?(Array)
               array[i][m] += array[i + 1][m]
+            elsif !array[i + 1][m].is_a?(Array) && array[i][m].is_a?(Array)
+              array[i][m] << array[i + 1][m]
+            else
+              p array[i][m]
+              p array[i + 1][m]
+              array[i][m] = [array[i][m]] + array[i + 1][m]
             end
           end
         end
@@ -124,6 +130,7 @@ module Model
 
     public_files = get_files
     files = get_files(ids)
+    p files
     {files: files, public_files: public_files}
   end
 
@@ -139,7 +146,7 @@ module Model
     db = db_connect
     password_digest = BCrypt::Password.create(password)
     begin
-      p db.execute("INSERT INTO users (email, username, password_digest, role) VALUES (?, ?, ?, 'member')", email, name, password_digest)
+      p db.execute("INSERT INTO users (email, username, password_digest, role) VALUES (?, ?, ?, 'member')", email.chomp, name.chomp, password_digest.chomp)
     rescue
       return "ERROR: Username or Email is already taken, try to login"
     end
@@ -192,7 +199,7 @@ module Model
       to: mail_to.to_s,
       from: email_config["email_user"].to_s,
       subject: "Confirm your account at epic cloud site",
-      body: "Welcome to OUR site #{name}, where we steal you're data and sell it for profit\nSounds good?\n\nClick here to erase your suffering (by reading this mail you accept all our terms and conditions)\nhttp://#{host}/user/confirm_email/#{confirm_email_key}\n\nThanks for all the fish!"
+      body: "Welcome to OUR site #{name}, where we steal you're data and sell it for profit\nSounds good?\n\nClick here to erase your suffering (by reading this mail you accept all our terms and conditions which include but is not limited to giving us all your possession and everything you are)\nhttp://#{host}/user/confirm_email/#{confirm_email_key}\n\nThanks for all the fish (and your soul)!"
     ).deliver
 
     confirm_email_key
@@ -274,7 +281,7 @@ module Model
       if category_id == []
         p category_id == []
         db.execute("INSERT INTO category (category_name) VALUES (?);", category.chomp)
-        category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category)
+        category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category.chomp)
       end
 
       db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
@@ -307,13 +314,13 @@ module Model
     end
   end
 
-  # Deletes a cetgory
+  # Deletes a category
   #
   # @param [String] password_digest the user's password hash
   # @param [Integer] file_id the id of the file
   # @param [String] category_name to delete
   #
-  # @return [String] error message if error occurred otherwise nil
+  # @return [String, nil] error message if error occurred otherwise nil
   def delete_category(password_digest, file_id, category_name)
     db = db_connect
     file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
@@ -326,6 +333,88 @@ module Model
         return "ERROR: Category doesn't exist"
       end
       db.execute("DELETE FROM category_files WHERE cat_id = ? AND file_id = ?", category_id[0]["id"], file_id)
+    else
+      return "ERROR: Insufficient permissions"
+    end
+    nil
+  end
+
+  # Add a category to a already existing file
+  #
+  # @param [String] password_digest the user's password hash
+  # @param [Integer] file_id the id of the file
+  # @param [String] category_name to add
+  #
+  # @return [String, nil] error message if error occurred otherwise nil
+  def add_category(password_digest, file_id, category_name)
+    db = db_connect
+    file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
+    if file_id.to_i == file_ids[0]["file_id"]
+      category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)
+
+      p category_id
+      if category_id == []
+        db.execute("INSERT INTO category (category_name) VALUES (?);", category_name.chomp)
+        category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name.chomp)
+      end
+      db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
+    else
+      return "ERROR: Insufficient permissions"
+    end
+    nil
+  end
+
+  # Deletes a user from a file
+  #
+  # @param [String] password_digest the user's password hash
+  # @param [Integer] file_id the id of the file
+  # @param [String] username to delete
+  #
+  # @return [String, nil] error message if error occurred otherwise nil
+  def delete_user(password_digest, file_id, user_id)
+    db = db_connect
+    file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
+    if file_id.to_i == file_ids[0]["file_id"]
+      user_id = db.execute("SELECT user_id FROM files_users INNER JOIN users ON files_users.user_id = users.id WHERE file_id = ? AND username = ?", file_id, username.chomp)
+
+      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", user_id, file_id)
+
+      if duplicate_control == [] || duplicate_control.nil?
+        return "ERROR: User doesn't exist"
+      end
+
+      db.execute("DELETE FROM files_users WHERE user_id = ? AND file_id = ?", user_id, file_id)
+    else
+      return "ERROR: Insufficient permissions"
+    end
+    nil
+  end
+
+  # Add a user to a already existing file
+  #
+  # @param [String] password_digest the user's password hash
+  # @param [Integer] file_id the id of the file
+  # @param [String] username to add
+  #
+  # @return [String, nil] error message if error occurred otherwise nil
+  def add_user(password_digest, file_id, username)
+    db = db_connect
+    file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
+    if file_id.to_i == file_ids[0]["file_id"]
+      p username
+      user_id = db.execute("SELECT id FROM users WHERE username = ?", username.chomp)
+      p user_id
+      if user_id == [] || user_id.nil?
+        return "ERROR: User doesn't exist"
+      end
+
+      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", user_id[0]["user_id"], file_id)
+
+      if duplicate_control == [] || duplicate_control.nil?
+        db.execute("INSERT INTO files_users (user_id, file_id) VALUES (?, ?);", user_id[0]["id"], file_id)
+      else
+        return "ERROR: User already owns this file"
+      end
     else
       return "ERROR: Insufficient permissions"
     end

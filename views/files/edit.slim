@@ -14,7 +14,7 @@ p Dina filer:
          th edit
 
       - files.length.times do |i|
-         tr 
+         tr
             - files[0].values.length.times do |j|
                td = files[i].values[j]
             - if files[i]["public"] == 1
@@ -34,6 +34,7 @@ p Dina filer:
                   input type="submit" value="Delete"/
             td
                a href="/files/#{files[i]["id"]}/edit" edit
+
 
    table
       tr
@@ -57,6 +58,13 @@ p Dina filer:
                   input type="hidden" name="category" value="#{files[0]["category_name"]}"/
                   input type="submit" value="Delete"/
 
+   form action="/categories/add" method="post"
+      input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+      input type="text" name="category" placeholder="Category Name"/
+      input type="submit" value="Add Category"/
+
+   p = files[0]["username"]
+
    table
       tr
          th Users
@@ -68,6 +76,7 @@ p Dina filer:
                td
                   form action="/files/delete" method="post"
                      input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+                     input type="hidden" name="user_id" value="#{files[0]["user_id"][i]}"/
                      input type="submit" value="Delete"/
       - else
          tr
@@ -75,5 +84,10 @@ p Dina filer:
             td
                form action="/files/delete" method="post"
                   input type="hidden" name="file_id" value="#{files[0]["id"]}"/
-                  input type="hidden" name="username" value="#{files[0]["username"]}"/
+                  input type="hidden" name="user_id" value="#{files[0]["user_id"]}"/
                   input type="submit" value="Delete"/
+
+   form action="/user/add" method="post"
+      input type="hidden" name="file_id" value="#{files[0]["id"]}"/
+      input type="text" name="username" placeholder="Username"/
+      input type="submit" value="Add User"/
