@@ -28,6 +28,21 @@ module Model
     end
   end
 
+  # Get a all user info
+  #
+  # @param password_digest [String] the user's password hash
+  #
+  # @return [hash, nil] with the user id
+  def get_all_user_info(password_digest)
+    db = db_connect
+    user_info = db.execute("SELECT * FROM users WHERE password_digest = ?", password_digest)
+    if (user_info == []) || user_info.nil?
+      nil
+    else
+      user_info[0]
+    end
+  end
+
   # Get all file ids belonging to a certain user
   #
   # @param password_digest [String] the user's password hash
@@ -67,21 +82,22 @@ module Model
   #
   # @return [Array] with the array and merge merged to one array
   def merge_duplicates(array, merge, dupe)
+    array.sort_by! { |elem| elem["id"] }
     i = 0
     while i + 1 < array.length
       if array[i][dupe] == array[i + 1][dupe]
         # should merge
         merge.each do |m|
           if array[i][m] != array[i + 1][m]
-            if !array[i][m].is_a?(Array) && !array[i + 1][m].is_a?(Array)
+            if array[i][m].is_a?(Array) && !array[i][m].include?(array[i + 1][m])
+              if array[i + 1][m].is_a?(Array)
+                array[i][m] += array[i + 1][m]
+              else
+                array[i][m] << array[i + 1][m]
+              end
+            elsif !array[i][m].is_a?(Array) && !array[i + 1][m].is_a?(Array)
               array[i][m] = [array[i][m], array[i + 1][m]]
-            elsif array[i][m].is_a?(Array) && array[i + 1][m].is_a?(Array)
-              array[i][m] += array[i + 1][m]
-            elsif !array[i + 1][m].is_a?(Array) && array[i][m].is_a?(Array)
-              array[i][m] << array[i + 1][m]
-            else
-              p array[i][m]
-              p array[i + 1][m]
+            elsif array[i + 1][m].is_a?(Array) && !array[i + 1][m].include?(array[i][m])
               array[i][m] = [array[i][m]] + array[i + 1][m]
             end
           end
@@ -130,8 +146,38 @@ module Model
 
     public_files = get_files
     files = get_files(ids)
-    p files
     {files: files, public_files: public_files}
+  end
+
+  # Checks if the current user is allowed to access a private file
+  #
+  # @param [String] password_digest the user's password hash
+  # @param [Integer] user_id the user id that uploaded the file
+  # @param [Boolean] file_name is the files name
+  #
+  # @return [String] error if an error occured
+  def user_can_access_private_file(password_digest, user_id, file_name)
+    path = "./private/files/#{user_id}/#{file_name}"
+    if File.exist?(path)
+      current_user = get_user_id(password_digest)
+      if current_user == user_id.to_i
+        return true
+      end
+      db = db_connect
+      file_info = db.execute("SELECT user_id FROM files INNER JOIN files_users ON files_users.file_id = files.id WHERE path = ? AND user_id = ?", path, current_user)
+
+      if file_info == [] || file_info.nil?
+        return "ERROR: Access denied"
+      end
+
+      if file_info[0]["user_id"] == current_user
+        true
+      else
+        "ERROR: Unknown error"
+      end
+    else
+      "ERROR: File doesn't exist"
+    end
   end
 
   # get both private and public files and makes sure ids are formatted correctly
@@ -146,7 +192,7 @@ module Model
     db = db_connect
     password_digest = BCrypt::Password.create(password)
     begin
-      p db.execute("INSERT INTO users (email, username, password_digest, role) VALUES (?, ?, ?, 'member')", email.chomp, name.chomp, password_digest.chomp)
+      db.execute("INSERT INTO users (email, username, password_digest, role) VALUES (?, ?, ?, 'member')", email.chomp, name.chomp, password_digest.chomp)
     rescue
       return "ERROR: Username or Email is already taken, try to login"
     end
@@ -213,11 +259,9 @@ module Model
   #
   # @return [String] error if an error occured
   def file_upload(password_digest, parentfile, publicfile)
-    p parentfile
-    p publicfile
     db = db_connect
     if parentfile.nil?
-      return "ERROR: please select a file you want to upload, lol"
+      return "ERROR: Please select a file you want to upload, lol"
     end
     user_id = get_user_id(password_digest)
     filename = parentfile[:filename]
@@ -275,11 +319,7 @@ module Model
     categories = parentfile[:type].split("/")
     categories.each do |category|
       category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category.chomp)
-      p "kategorier problemet"
-      p category
-      p category_id
       if category_id == []
-        p category_id == []
         db.execute("INSERT INTO category (category_name) VALUES (?);", category.chomp)
         category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category.chomp)
       end
@@ -297,8 +337,8 @@ module Model
   def delete_file(file_id, password_digest)
     db = db_connect
     user_id = db.execute("SELECT user_id FROM files_users WHERE file_id = ?", file_id)
-    p user_id
-    if !user_id.nil? && user_id[0]["user_id"] == get_user_id(password_digest)
+
+    if !user_id.nil? && user_id != [] && user_id[0]["user_id"] == get_user_id(password_digest)
       file_path = db.execute("SELECT path FROM files WHERE id = ?", file_id)
       db.execute("DELETE FROM files_users WHERE file_id = ?", file_id)
       db.execute("DELETE FROM files WHERE id = ?", file_id)
@@ -307,10 +347,10 @@ module Model
       if !file_path.nil? && File.exist?(file_path[0]["path"])
         File.delete(file_path[0]["path"])
       else
-        "ERROR: the file doesn't exist"
+        "ERROR: The file doesn't exist"
       end
     else
-      "ERROR: you don't have permission to delete that file"
+      "ERROR: You don't have permission to delete that file"
     end
   end
 
@@ -326,9 +366,6 @@ module Model
     file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
     if file_id.to_i == file_ids[0]["file_id"]
       category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)
-      p category_name
-      p category_id
-      p file_id
       if category_id == [] || category_id.nil?
         return "ERROR: Category doesn't exist"
       end
@@ -351,13 +388,18 @@ module Model
     file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
     if file_id.to_i == file_ids[0]["file_id"]
       category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name)
-
-      p category_id
       if category_id == []
         db.execute("INSERT INTO category (category_name) VALUES (?);", category_name.chomp)
         category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name.chomp)
       end
-      db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
+
+      duplicate_control = db.execute("SELECT file_id FROM category_files WHERE file_id = ? AND cat_id = ?", file_id.to_i, category_id)
+
+      if duplicate_control == []
+        db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)
+      else
+        return "ERROR: Category is already applied"
+      end
     else
       return "ERROR: Insufficient permissions"
     end
@@ -375,9 +417,7 @@ module Model
     db = db_connect
     file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
     if file_id.to_i == file_ids[0]["file_id"]
-      user_id = db.execute("SELECT user_id FROM files_users INNER JOIN users ON files_users.user_id = users.id WHERE file_id = ? AND username = ?", file_id, username.chomp)
-
-      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", user_id, file_id)
+      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", file_id, user_id)
 
       if duplicate_control == [] || duplicate_control.nil?
         return "ERROR: User doesn't exist"
@@ -401,17 +441,16 @@ module Model
     db = db_connect
     file_ids = db.execute("SELECT file_id FROM files_users WHERE user_id = ? AND file_id = ?", get_user_id(password_digest), file_id)
     if file_id.to_i == file_ids[0]["file_id"]
-      p username
       user_id = db.execute("SELECT id FROM users WHERE username = ?", username.chomp)
-      p user_id
+
       if user_id == [] || user_id.nil?
         return "ERROR: User doesn't exist"
       end
 
-      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", user_id[0]["user_id"], file_id)
+      duplicate_control = db.execute("SELECT user_id FROM files_users WHERE file_id = ? AND user_id = ?", file_id.to_i, user_id[0]["id"])
 
       if duplicate_control == [] || duplicate_control.nil?
-        db.execute("INSERT INTO files_users (user_id, file_id) VALUES (?, ?);", user_id[0]["id"], file_id)
+        db.execute("INSERT INTO files_users (user_id, file_id) VALUES (?, ?);", user_id[0]["id"], file_id.to_i)
       else
         return "ERROR: User already owns this file"
       end
