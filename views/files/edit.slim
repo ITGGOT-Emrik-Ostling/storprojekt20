@@ -1,6 +1,6 @@
 p = files
 
-p Dina filer:
+p Vald fil:
 
 - unless files[0].nil?
    table
@@ -35,7 +35,8 @@ p Dina filer:
             td
                a href="/files/#{files[i]["id"]}/edit" edit
 
-
+   br/
+   
    table
       tr
          th Categories
@@ -63,7 +64,7 @@ p Dina filer:
       input type="text" name="category" placeholder="Category Name"/
       input type="submit" value="Add Category"/
 
-   p = files[0]["username"]
+   br/
 
    table
       tr
@@ -74,7 +75,7 @@ p Dina filer:
             tr
                td = files[0]["username"][i]
                td
-                  form action="/files/delete" method="post"
+                  form action="/user/delete" method="post"
                      input type="hidden" name="file_id" value="#{files[0]["id"]}"/
                      input type="hidden" name="user_id" value="#{files[0]["user_id"][i]}"/
                      input type="submit" value="Delete"/
@@ -82,7 +83,7 @@ p Dina filer:
          tr
             td = files[0]["username"]
             td
-               form action="/files/delete" method="post"
+               form action="/user/delete" method="post"
                   input type="hidden" name="file_id" value="#{files[0]["id"]}"/
                   input type="hidden" name="user_id" value="#{files[0]["user_id"]}"/
                   input type="submit" value="Delete"/
