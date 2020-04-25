@@ -22,48 +22,50 @@ require "sinatra/cookies"
 use Rack::Cookies
 helpers Sinatra::Cookies
 
-# look into this later
+# protects against general attacks
 require "rack/protection"
 use Rack::Protection
 
-# https://github.com/kickstarter/rack-attack needs to be configured
-# require "rack/attack"
-# use Rack::Attack
-# Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
+# used to stop bad behaving clients
+require "active_support/cache"
+require "rack/attack"
+use Rack::Attack
+Rack::Attack.cache.store = ActiveSupport::Cache::MemoryStore.new
 
-# Rack::Attack.throttle("requests by ip", limit: 5, period: 2) do |request|
-#   request.ip
-# end
-# require "sinatra/rate-limiter"
-# enable :rate_limiter
+# Emails is slow to send so I want to throttle it as hard as possible
+Rack::Attack.throttle("emails", limit: 5, period: 60.seconds) do |req|
+  if (req.path == "/user/login" || req.path == "/user/resend_email") && req.post?
+    req.ip
+  end
+end
+
+Rack::Attack.throttle("register/ip", limit: 3, period: 30.seconds) do |req|
+  if req.path == "/user/register" && req.post?
+    req.ip
+  end
+end
+
+Rack::Attack.throttle("requests/ip", limit: 100, period: 3.minutes) do |req|
+  req.ip
+end
+
+Rack::Attack.throttle("post-requests/ip", limit: 100, period: 10.minutes) do |req|
+  # post request require more processing server side → harder restrictions
+  if req.post?
+    req.ip
+  end
+end
+
+Rack::Attack.throttled_response = lambda do |env|
+  [429, {}, ["Sluta spamma sidan tack, vänta lite så kan du försöka igen senare"]]
+end
 
 # for mail
 require "mail"
-
 require "parseconfig"
 config = ParseConfig.new("./config.properties")
 
-Mail.defaults do
-  delivery_method :smtp, {
-    address: config["email_server"],
-    port: 465,
-    user_name: config["email_user"],
-    password: config["email_password"],
-    authentication: :login,
-    ssl: true,
-    openssl_verify_mode: "none"
-  }
-end
-
 before do
-  if !development
-    session[:login] = "$2a$12$Wr1G1Y7elWcsdBPGJeUq0ut3AMsZZ/58jqhsC6Uxx2cz2Wn/wsMOS"
-    session[:name] = "hej"
-    session[:role] = "member"
-  else
-    # rate_limit
-  end
-
   session[:error] = nil if request.post?
 
   if request.path_info != "/" && !request.path_info.start_with?("/user/") && session[:login].nil?
@@ -112,10 +114,13 @@ end
 # @param [Integer] :user_id, the id of the user
 # @param [Integer] :file_name, the name of the file
 get("/private/files/:user_id/:file_name") do
-  if params[:user_id].to_i == get_user_id(session[:login])
+  result = user_can_access_private_file(session[:login], params[:user_id], params[:file_name])
+
+  if result == true
     send_file("./private/files/#{params[:user_id]}/#{params[:file_name]}")
-  else
-    halt 403, "Access Denied, logged in as #{get_user_id(session[:login])} expected #{params[:user_id]}"
+  elsif (result.is_a? String) && result.start_with?("ERROR: ")
+    session[:error] = result
+    redirect back
   end
 end
 
@@ -137,7 +142,6 @@ end
 #
 # @see Model#file_upload
 post("/files/create") do
-  p params
   result = file_upload(session[:login], params[:file], params[:public])
   if (result.is_a? String) && result.start_with?("ERROR: ")
     session[:error] = result
@@ -202,6 +206,19 @@ post("/user/add") do
   redirect back
 end
 
+# Resend confirmation email
+#
+# @see Model#send_confirmation_email
+post("/user/resend_email") do
+  user_info = get_all_user_info(session[:login])
+
+  unless user_info.nil?
+    session[:confirm_email] = send_confirmation_email(user_info["email"], config, user_info["username"], request.host_with_port)
+  end
+
+  redirect back
+end
+
 # Regesters a user and sends confirmation email
 #
 # @see Model#user_register
@@ -256,5 +273,5 @@ end
 # Clears the session making the user logout
 post("/user/logout") do
   session.clear
-  redirect("/")
+  redirect back
 end
