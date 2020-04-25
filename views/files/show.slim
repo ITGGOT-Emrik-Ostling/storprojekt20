@@ -54,12 +54,16 @@ p Publika filer:
                   td
                      a href='#{public_files[i]["path"][1..-1]}' download="" Download
                td = public_files[i]["path"].split("/").last
-p Email status
-p = email
+
 h3 LADDA UPP FIL
-form action="/files/create" method="post" enctype="multipart/form-data"
-   input type="file" name="file"
-   input type="checkbox" name="public" Publik fil
-   input type="submit" value="Ladda upp"
+- if email
+   form action="/files/create" method="post" enctype="multipart/form-data"
+      input type="file" name="file"
+      input type="checkbox" name="public" Publik fil
+      input type="submit" value="Ladda upp"
+- else
+   p Du måste verifiera din mail för att ladda upp filer
+   form action="/user/resend_email" method="post"
+      input type="submit" value="Skicka igen"
 
 script src="/script.js"
