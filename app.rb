@@ -11,10 +11,9 @@ include Model
 
 enable :sessions
 
-development = true
-require "sinatra/reloader" if development
-also_reload "./model.rb"
-also_reload "./app.rb"
+# require "sinatra/reloader"
+# also_reload "./model.rb"
+# also_reload "./app.rb"
 
 # for cookies
 require "rack/contrib"
@@ -57,7 +56,7 @@ Rack::Attack.throttle("post-requests/ip", limit: 100, period: 10.minutes) do |re
 end
 
 Rack::Attack.throttled_response = lambda do |env|
-  [429, {}, ["Sluta spamma sidan tack, vänta lite så kan du försöka igen senare"]]
+  [429, {}, ["Take it a little slower please, try again in a few minutes"]]
 end
 
 # for mail
@@ -82,7 +81,7 @@ get("/") do
       session[:role] = "member"
       redirect("/files/show")
     end
-    # Not logged in redirects to the startpage
+    # Not logged in redirects to the start page
     slim(:start, locals: {error: session[:error]})
   else
     redirect("/files/show")
@@ -94,8 +93,14 @@ end
 # @see Model#get_file_ids
 # @see Model#get_all_files
 get("/files/show") do
-  file_ids = get_file_ids(session[:login])
+  p session[:role]
+  file_ids = if session[:role] == "admin"
+    "admin"
+  else
+    get_file_ids(session[:login])
+  end
   files = get_all_files(file_ids)
+  p files
   email = email_status(session[:login])
   slim(:"files/show", locals: {error: session[:error], name: session[:name], files: files[:files], public_files: files[:public_files], email: email})
 end
@@ -219,7 +224,7 @@ post("/user/resend_email") do
   redirect back
 end
 
-# Regesters a user and sends confirmation email
+# Registers a user and sends confirmation email
 #
 # @see Model#user_register
 # @see Model#send_confirmation_email

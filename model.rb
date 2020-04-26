@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 #
-# Handles
+# Handles databaseinteraction, validation and authentication
 #
 module Model
   # Connects to the database
@@ -112,7 +112,7 @@ module Model
 
   # get private or public files
   #
-  # @param ids [Array] ids to look for if looking for private files
+  # @param ids [Array, String] ids to look for if looking for private files or "admin" string if it should return all files
   #
   # @return [Array] with all the files as individual hashes
   def get_files(ids = nil)
@@ -121,12 +121,13 @@ module Model
     INNER JOIN category ON category.id = category_files.cat_id)
     INNER JOIN files ON files.id = category_files.file_id)
     INNER JOIN files_users ON files_users.file_id = category_files.file_id)
-    INNER JOIN users ON users.id == files_users.user_id)
-    WHERE"
-    files = if ids.nil?
-      db.execute(sql_base + " public = 1")
+    INNER JOIN users ON users.id == files_users.user_id)"
+    files = if ids == "admin"
+      db.execute(sql_base)
+    elsif ids.nil?
+      db.execute(sql_base + "WHERE public = 1")
     else
-      db.execute(sql_base + " files.id IN #{ids}")
+      db.execute(sql_base + "WHERE files.id IN #{ids}")
     end
     files = merge_duplicates(files, ["category_name", "username", "user_id"], "id")
     files
@@ -134,15 +135,19 @@ module Model
 
   # get both private and public files and makes sure ids are formatted correctly
   #
-  # @param file_ids [Array] ids to look for
+  # @param file_ids [Array, String] ids to look for or the string "admin" if it should return all private files
   #
   # @return [Hash] with public and private files as array with all their files as individual hashes
   def get_all_files(file_ids)
-    ids = array_of_hashes_to_array(file_ids)
+    if file_ids != "admin"
+      ids = array_of_hashes_to_array(file_ids)
 
-    ids = ids.to_s
-    ids[0] = "("
-    ids[-1] = ")"
+      ids = ids.to_s
+      ids[0] = "("
+      ids[-1] = ")"
+    else
+      ids = "admin"
+    end
 
     public_files = get_files
     files = get_files(ids)
@@ -254,10 +259,10 @@ module Model
   # Save the file in the database, makes sure there isn't any duplicates and save the file to disk
   #
   # @param [String] password_digest the user's password hash
-  # @param [Array] parentfile file object returned by the fileupload form containing file information
+  # @param [Array] parentfile file object returned by the file upload form containing file information
   # @param [Boolean] publicfile is the file public
   #
-  # @return [String] error if an error occured
+  # @return [String] error if an error occurred
   def file_upload(password_digest, parentfile, publicfile)
     db = db_connect
     if parentfile.nil?
@@ -308,7 +313,7 @@ module Model
       i += 1
     end
 
-    File.open(path, "wb") do |f| # wb is the shit, w+ is not good and corrupts everyhting
+    File.open(path, "wb") do |f| # wb is the shit, w+ is not good and corrupts everything
       f.write(file.read)
     end
 
@@ -393,7 +398,9 @@ module Model
         category_id = db.execute("SELECT id FROM category WHERE category_name = ?", category_name.chomp)
       end
 
-      duplicate_control = db.execute("SELECT file_id FROM category_files WHERE file_id = ? AND cat_id = ?", file_id.to_i, category_id)
+      p file_id.to_i
+      p category_id
+      duplicate_control = db.execute("SELECT file_id FROM category_files WHERE file_id = ? AND cat_id = ?", file_id.to_i, category_id[0]["id"])
 
       if duplicate_control == []
         db.execute("INSERT INTO category_files (cat_id, file_id) VALUES (?, ?);", category_id[0]["id"], file_id)

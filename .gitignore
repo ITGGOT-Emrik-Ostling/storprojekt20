@@ -2,3 +2,4 @@ private/files/
 public/files/
 config.properties
 db/users.db
+/.vscode
