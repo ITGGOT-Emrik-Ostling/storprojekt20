@@ -440,7 +440,7 @@
 
   
     <span class="summary_desc"><div class='inline'>
-<p>Regesters a user and sends confirmation email.</p>
+<p>Registers a user and sends confirmation email.</p>
 </div></span>
   
 </li>
@@ -518,6 +518,7 @@
       <pre class="lines">
 
 
+76
 77
 78
 79
@@ -530,11 +531,10 @@
 86
 87
 88
-89
-90</pre>
+89</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 77</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 76</span>
 
 <span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
@@ -544,7 +544,7 @@
       <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:role</span><span class='rbracket'>]</span> <span class='op'>=</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>member</span><span class='tstring_end'>&quot;</span></span>
       <span class='id identifier rubyid_redirect'>redirect</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/show</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
     <span class='kw'>end</span>
-    <span class='comment'># Not logged in redirects to the startpage
+    <span class='comment'># Not logged in redirects to the start page
 </span>    <span class='id identifier rubyid_slim'>slim</span><span class='lparen'>(</span><span class='symbol'>:start</span><span class='comma'>,</span> <span class='label'>locals:</span> <span class='lbrace'>{</span><span class='label'>error:</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:error</span><span class='rbracket'>]</span><span class='rbrace'>}</span><span class='rparen'>)</span>
   <span class='kw'>else</span>
     <span class='id identifier rubyid_redirect'>redirect</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/show</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span>
@@ -610,13 +610,13 @@
       <pre class="lines">
 
 
-107
-108
-109
-110</pre>
+112
+113
+114
+115</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 107</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 112</span>
 
 <span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/:file_id/edit</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_files'>files</span> <span class='op'>=</span> <span class='id identifier rubyid_get_all_files'><span class='object_link'><a href="Model.html#get_all_files-instance_method" title="Model#get_all_files (method)">get_all_files</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span><span class='rparen'>)</span>
@@ -664,19 +664,31 @@
       <pre class="lines">
 
 
+95
 96
 97
 98
 99
 100
-101</pre>
+101
+102
+103
+104
+105
+106</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 96</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 95</span>
 
 <span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/show</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
-  <span class='id identifier rubyid_file_ids'>file_ids</span> <span class='op'>=</span> <span class='id identifier rubyid_get_file_ids'><span class='object_link'><a href="Model.html#get_file_ids-instance_method" title="Model#get_file_ids (method)">get_file_ids</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_p'>p</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:role</span><span class='rbracket'>]</span>
+  <span class='id identifier rubyid_file_ids'>file_ids</span> <span class='op'>=</span> <span class='kw'>if</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:role</span><span class='rbracket'>]</span> <span class='op'>==</span> <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>admin</span><span class='tstring_end'>&quot;</span></span>
+    <span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>admin</span><span class='tstring_end'>&quot;</span></span>
+  <span class='kw'>else</span>
+    <span class='id identifier rubyid_get_file_ids'><span class='object_link'><a href="Model.html#get_file_ids-instance_method" title="Model#get_file_ids (method)">get_file_ids</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='rparen'>)</span>
+  <span class='kw'>end</span>
   <span class='id identifier rubyid_files'>files</span> <span class='op'>=</span> <span class='id identifier rubyid_get_all_files'><span class='object_link'><a href="Model.html#get_all_files-instance_method" title="Model#get_all_files (method)">get_all_files</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_file_ids'>file_ids</span><span class='rparen'>)</span>
+  <span class='id identifier rubyid_p'>p</span> <span class='id identifier rubyid_files'>files</span>
   <span class='id identifier rubyid_email'>email</span> <span class='op'>=</span> <span class='id identifier rubyid_email_status'><span class='object_link'><a href="Model.html#email_status-instance_method" title="Model#email_status (method)">email_status</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='rparen'>)</span>
   <span class='id identifier rubyid_slim'>slim</span><span class='lparen'>(</span><span class='symbol'>:&quot;files/show&quot;</span><span class='comma'>,</span> <span class='label'>locals:</span> <span class='lbrace'>{</span><span class='label'>error:</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:error</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='label'>name:</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:name</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='label'>files:</span> <span class='id identifier rubyid_files'>files</span><span class='lbracket'>[</span><span class='symbol'>:files</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='label'>public_files:</span> <span class='id identifier rubyid_files'>files</span><span class='lbracket'>[</span><span class='symbol'>:public_files</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='label'>email:</span> <span class='id identifier rubyid_email'>email</span><span class='rbrace'>}</span><span class='rparen'>)</span>
 <span class='kw'>end</span></pre>
@@ -749,19 +761,19 @@
       <pre class="lines">
 
 
-116
-117
-118
-119
-120
 121
 122
 123
 124
-125</pre>
+125
+126
+127
+128
+129
+130</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 116</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 121</span>
 
 <span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/private/files/:user_id/:file_name</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_user_can_access_private_file'><span class='object_link'><a href="Model.html#user_can_access_private_file-instance_method" title="Model#user_can_access_private_file (method)">user_can_access_private_file</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:user_id</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_name</span><span class='rbracket'>]</span><span class='rparen'>)</span>
@@ -842,18 +854,18 @@
       <pre class="lines">
 
 
-131
-132
-133
-134
-135
 136
 137
 138
-139</pre>
+139
+140
+141
+142
+143
+144</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 131</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 136</span>
 
 <span class='id identifier rubyid_get'>get</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/confirm_email/:key</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='kw'>if</span> <span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:confirm_email</span><span class='rbracket'>]</span> <span class='op'>==</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:key</span><span class='rbracket'>]</span> <span class='op'>&amp;&amp;</span> <span class='op'>!</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_nil?'>nil?</span>
@@ -904,16 +916,16 @@
       <pre class="lines">
 
 
-179
-180
-181
-182
-183
 184
-185</pre>
+185
+186
+187
+188
+189
+190</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 179</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 184</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/categories/add</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_add_category'><span class='object_link'><a href="Model.html#add_category-instance_method" title="Model#add_category (method)">add_category</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:category</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rparen'>)</span>
@@ -962,16 +974,16 @@
       <pre class="lines">
 
 
-168
-169
-170
-171
-172
 173
-174</pre>
+174
+175
+176
+177
+178
+179</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 168</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 173</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/categories/delete</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_delete_category'><span class='object_link'><a href="Model.html#delete_category-instance_method" title="Model#delete_category (method)">delete_category</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:category</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rparen'>)</span>
@@ -1020,16 +1032,16 @@
       <pre class="lines">
 
 
-144
-145
-146
-147
-148
 149
-150</pre>
+150
+151
+152
+153
+154
+155</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 144</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 149</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/create</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_file_upload'><span class='object_link'><a href="Model.html#file_upload-instance_method" title="Model#file_upload (method)">file_upload</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:public</span><span class='rbracket'>]</span><span class='rparen'>)</span>
@@ -1078,18 +1090,18 @@
       <pre class="lines">
 
 
-155
-156
-157
-158
-159
 160
 161
 162
-163</pre>
+163
+164
+165
+166
+167
+168</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 155</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 160</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/files/delete</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_file_id'>file_id</span> <span class='op'>=</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span>
@@ -1140,16 +1152,16 @@
       <pre class="lines">
 
 
-201
-202
-203
-204
-205
 206
-207</pre>
+207
+208
+209
+210
+211
+212</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 201</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 206</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/add</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_add_user'><span class='object_link'><a href="Model.html#add_user-instance_method" title="Model#add_user (method)">add_user</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:username</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rparen'>)</span>
@@ -1198,16 +1210,16 @@
       <pre class="lines">
 
 
-190
-191
-192
-193
-194
 195
-196</pre>
+196
+197
+198
+199
+200
+201</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 190</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 195</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/delete</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_result'>result</span> <span class='op'>=</span> <span class='id identifier rubyid_delete_user'><span class='object_link'><a href="Model.html#delete_user-instance_method" title="Model#delete_user (method)">delete_user</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:file_id</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:user_id</span><span class='rbracket'>]</span><span class='period'>.</span><span class='id identifier rubyid_to_s'>to_s</span><span class='rparen'>)</span>
@@ -1310,11 +1322,6 @@
       <pre class="lines">
 
 
-251
-252
-253
-254
-255
 256
 257
 258
@@ -1330,10 +1337,15 @@
 268
 269
 270
-271</pre>
+271
+272
+273
+274
+275
+276</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 251</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 256</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/login</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_password'>password</span> <span class='op'>=</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:password</span><span class='rbracket'>]</span>
@@ -1389,13 +1401,13 @@
       <pre class="lines">
 
 
-274
-275
-276
-277</pre>
+279
+280
+281
+282</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 274</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 279</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/logout</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_session'>session</span><span class='period'>.</span><span class='id identifier rubyid_clear'>clear</span>
@@ -1418,7 +1430,7 @@
 </h3><div class="docstring">
   <div class="discussion">
     
-<p>Regesters a user and sends confirmation email</p>
+<p>Registers a user and sends confirmation email</p>
 
 
   </div>
@@ -1443,11 +1455,6 @@
       <pre class="lines">
 
 
-226
-227
-228
-229
-230
 231
 232
 233
@@ -1458,10 +1465,15 @@
 238
 239
 240
-241</pre>
+241
+242
+243
+244
+245
+246</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 226</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 231</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/register</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_digest'>digest</span> <span class='op'>=</span> <span class='id identifier rubyid_user_register'><span class='object_link'><a href="Model.html#user_register-instance_method" title="Model#user_register (method)">user_register</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:password</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:name</span><span class='rbracket'>]</span><span class='comma'>,</span> <span class='id identifier rubyid_params'>params</span><span class='lbracket'>[</span><span class='symbol'>:email</span><span class='rbracket'>]</span><span class='rparen'>)</span>
@@ -1519,18 +1531,18 @@
       <pre class="lines">
 
 
-212
-213
-214
-215
-216
 217
 218
 219
-220</pre>
+220
+221
+222
+223
+224
+225</pre>
     </td>
     <td>
-      <pre class="code"><span class="info file"># File 'app.rb', line 212</span>
+      <pre class="code"><span class="info file"># File 'app.rb', line 217</span>
 
 <span class='id identifier rubyid_post'>post</span><span class='lparen'>(</span><span class='tstring'><span class='tstring_beg'>&quot;</span><span class='tstring_content'>/user/resend_email</span><span class='tstring_end'>&quot;</span></span><span class='rparen'>)</span> <span class='kw'>do</span>
   <span class='id identifier rubyid_user_info'>user_info</span> <span class='op'>=</span> <span class='id identifier rubyid_get_all_user_info'><span class='object_link'><a href="Model.html#get_all_user_info-instance_method" title="Model#get_all_user_info (method)">get_all_user_info</a></span></span><span class='lparen'>(</span><span class='id identifier rubyid_session'>session</span><span class='lbracket'>[</span><span class='symbol'>:login</span><span class='rbracket'>]</span><span class='rparen'>)</span>
@@ -1551,7 +1563,7 @@
 </div>
 
       <div id="footer">
-  Generated on Sun Apr 26 00:18:29 2020 by
+  Generated on Sun Apr 26 19:23:26 2020 by
   <a href="http://yardoc.org" title="Yay! A Ruby Documentation Tool" target="_parent">yard</a>
   0.9.24 (ruby-2.6.3).
 </div>
