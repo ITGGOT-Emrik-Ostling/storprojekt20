@@ -3,11 +3,11 @@
 ## 1. Projektbeskrivning (Beskriv vad sidan ska kunna göra)
 Molnlagringstjänst där flera personer kan äga samma fil, dessa filer kan läsas, raderas kategoriseras och skapas.
 ## 2. Vyer (visa bildskisser på dina sidor)
-Första sketch på ett ungefär hur de ska se ut med de nödvädigaste funktionerna. Det blev inte riktigt så här eftersom jag inte gjorde tillräckligt med CSS men allt som krävs för att kunna visa det så här är på plats.
+Första sketch på ett ungefär hur de ska se ut med de nödvändigaste funktionerna. Det blev inte riktigt så här eftersom jag inte gjorde tillräckligt med CSS men allt som krävs för att kunna visa det så här är på plats.
 ![Sketch](sketch.png)
 ## 3. Databas med ER-diagram (Bild)
 ![ER-diagram](er.png)
-## 4. Arkitektur (Beskriv filer och mappar - vad gör/inehåller de?)
+## 4. Arkitektur (Beskriv filer och mappar - vad gör/innehåller de?)
 Private mappen innehåller privata filer. Public/files innehåller publika filer.
 model.rb innehåller alla förfrågningar till databasen. app.rb innehåller alla routes och liknande.
 
